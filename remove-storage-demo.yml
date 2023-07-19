@@ -1,0 +1,35 @@
+---
+- name: Attempt to create new storage volume with rescue
+  hosts: loadbalancers
+  become: True
+  gather_subset: hardware
+
+  pre_tasks:
+
+    - name: Check volume group
+      debug:
+        var: ansible_facts['lvm']['vgs']['kcvg']
+
+  tasks:
+
+    - name: Create new volumes
+      block:
+        - name: Remove Volume group and associated volumes
+          ansible.builtin.include_role:
+            name: redhat.rhel_system_roles.storage
+          vars:
+            storage_pools:
+            - name: kcvg
+              type: lvm
+              state: absent
+              disks:
+                - sdc
+              volumes:
+                - name: kclv
+                  fs_type: xfs
+                  state: absent
+      rescue:
+        - name: Send a message
+          ansible.builtin.debug:
+            msg: "Volume group does not exist"
+

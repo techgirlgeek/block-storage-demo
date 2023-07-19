@@ -1,0 +1,58 @@
+---
+- name: Attempt to create new storage volume with rescue
+  hosts: loadbalancers
+  become: True
+  gather_subset: hardware
+
+  pre_tasks:
+
+    - name: Check size of sdc
+      debug:
+        var: ansible_facts['devices']['sdc']['size']
+
+  tasks:
+
+    - name: Debug sdd
+      debug:
+        msg: "Device /dev/sdd does not exist"
+      when: ansible_facts['devices']['sdd'] is undefined
+
+    - name: Create new volumes
+      block:
+        - name: Create new volumes if space allows
+          ansible.builtin.include_role:
+            name: redhat.rhel_system_roles.storage
+          vars:
+            storage_pools:
+            - name: kcvg
+              type: lvm
+              state: present
+              disks:
+                - sdc
+              volumes:
+                - name: kclv
+                  size: 15g
+                  # Can omit xfs as it is the default in RHEL 8
+                  fs_type: xfs
+                  state: present
+      rescue:
+        - name: Send a message
+          ansible.builtin.debug:
+            msg: "Initial attempt failed creating with smaller sizes"
+
+        - name: Create smaller volume group if space allows
+          ansible.builtin.include_role:
+            name: redhat.rhel_system_roles.storage
+          vars:
+            storage_pools:
+            - name: kcvg
+              type: lvm
+              state: present
+              disks:
+                - sdc
+              volumes:
+                - name: kclv
+                  size: 2g
+                  fs_type: xfs
+                  state: present
+
