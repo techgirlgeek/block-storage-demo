@@ -52,7 +52,7 @@
                 - sdc
               volumes:
                 - name: kclv
-                  size: 2g
+                  size: 8g
                   fs_type: xfs
                   state: present
 
