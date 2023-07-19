@@ -1,0 +1,25 @@
+---
+- name: Attempt to create new storage volume with rescue
+  hosts: loadbalancers
+  become: True
+# gather_facts: True
+
+  tasks:
+
+    - name: Debug devices
+      debug:
+        msg:
+          - "{{ ansible_facts['devices'] }}"
+          - "{{ ansible_facts['device_links'] }}"
+          - "{{ ansible_facts['lvm'] }}"
+
+#    - name: Attempt to create storage
+#      block:
+#        - name: Import role
+#          ansible.builtin.include_role:
+#            name: redhat.rhel_system_roles.storage
+#      rescue:
+#        - name: Fail if the volume cannot be created
+#          ansible.builtin.fail:
+#            msg: There is not enough space to create this volume
+          #when: ansible_facts['devices']['sdc']['size_available'] > storage_pools['volumes']['size'] 
